@@ -1,0 +1,84 @@
+/* Copyright (c) 2026 Jeffrey Pfau
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'io.mgba.android'
+    compileSdk 34
+    ndkVersion '22.1.7171670'
+
+    defaultConfig {
+        applicationId 'io.mgba.android'
+        minSdk 23
+        targetSdk 34
+        versionCode 1
+        versionName '0.1.0'
+
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+
+        ndk {
+            abiFilters 'arm64-v8a', 'x86_64'
+        }
+
+        externalNativeBuild {
+            cmake {
+                arguments '-DANDROID_STL=c++_static'
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    buildFeatures {
+        compose true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion '1.2.0'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    kotlinOptions {
+        jvmTarget = '11'
+    }
+
+    sourceSets {
+        main.assets.srcDir "${rootProject.projectDir}/../../../res/shaders"
+        test.resources.srcDir "${rootProject.projectDir}/../../../res"
+    }
+
+    externalNativeBuild {
+        cmake {
+            path file('src/main/cpp/CMakeLists.txt')
+            version '3.22.1'
+        }
+    }
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.9.0'
+    implementation 'androidx.activity:activity-compose:1.6.1'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1'
+    implementation 'androidx.compose.ui:ui:1.2.1'
+    implementation 'androidx.compose.ui:ui-tooling-preview:1.2.1'
+    implementation 'androidx.compose.material:material:1.2.1'
+
+    debugImplementation 'androidx.compose.ui:ui-tooling:1.2.1'
+
+    testImplementation 'junit:junit:4.13.2'
+}
