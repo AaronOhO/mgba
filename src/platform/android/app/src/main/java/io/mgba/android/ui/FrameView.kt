@@ -10,7 +10,7 @@ import android.content.Context
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.util.Log
-import io.mgba.android.settings.EmulatorSettings
+import io.mgba.android.logic.settings.EmulatorSettings
 import io.mgba.android.shader.ShaderDefinition
 import io.mgba.android.R
 import javax.microedition.khronos.egl.EGLConfig

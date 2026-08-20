@@ -20,4 +20,6 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "mGBA-Android"
+include ':core'
+include ':logic'
 include ':app'

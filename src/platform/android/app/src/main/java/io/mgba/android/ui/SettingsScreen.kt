@@ -10,6 +10,7 @@ import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -45,13 +46,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.mgba.android.core.EmulatorKey
 import io.mgba.android.R
-import io.mgba.android.settings.EmulatorSettings
-import io.mgba.android.settings.IdleOptimization
+import io.mgba.android.BuildConfig
+import io.mgba.android.logic.settings.EmulatorSettings
+import io.mgba.android.logic.settings.IdleOptimization
 import io.mgba.android.shader.ShaderDefinition
 import io.mgba.android.shader.ShaderUniformDefinition
 import java.io.File
@@ -322,6 +330,13 @@ private fun VideoSettings(
         }
     }
     item { SectionTitle(stringResource(R.string.section_scaling_display)) }
+    item {
+        SwitchSetting(
+            stringResource(R.string.setting_fullscreen_player),
+            stringResource(R.string.setting_fullscreen_player_description),
+            settings.fullscreenPlayer,
+        ) { update { current -> current.copy(fullscreenPlayer = it) } }
+    }
     item { SwitchSetting(stringResource(R.string.setting_lock_aspect_ratio), null, settings.lockAspectRatio) { update { s -> s.copy(lockAspectRatio = it) } } }
     item { SwitchSetting(stringResource(R.string.setting_integer_scaling), stringResource(R.string.setting_integer_scaling_description), settings.integerScaling) { update { s -> s.copy(integerScaling = it) } } }
     item { SwitchSetting(stringResource(R.string.setting_linear_filtering), stringResource(R.string.setting_linear_filtering_description), settings.linearFiltering) { update { s -> s.copy(linearFiltering = it) } } }
@@ -522,6 +537,25 @@ private fun SystemSettings(
     item { SwitchSetting(stringResource(R.string.setting_mute_on_focus_lost), null, settings.muteOnFocusLost) { update { s -> s.copy(muteOnFocusLost = it) } } }
     item { SwitchSetting(stringResource(R.string.setting_pause_on_background), null, settings.pauseOnBackground) { update { s -> s.copy(pauseOnBackground = it) } } }
     item { SwitchSetting(stringResource(R.string.setting_mute_on_background), null, settings.muteOnBackground) { update { s -> s.copy(muteOnBackground = it) } } }
+    item { SectionTitle(stringResource(R.string.section_about)) }
+    item {
+        SettingRow(
+            stringResource(R.string.app_name),
+            stringResource(R.string.about_version, BuildConfig.VERSION_NAME),
+        ) {}
+    }
+    item {
+        SettingRow(
+            stringResource(R.string.about_cover_art),
+            stringResource(R.string.about_cover_art_source),
+        ) {}
+    }
+    item {
+        SettingRow(
+            stringResource(R.string.about_license),
+            stringResource(R.string.about_license_value),
+        ) {}
+    }
 }
 
 @Composable
@@ -550,10 +584,21 @@ private fun SwitchSetting(
     checked: Boolean,
     onChecked: (Boolean) -> Unit,
 ) {
-    SettingRow(title, description) {
+    SettingRow(
+        title,
+        description,
+        Modifier
+            .toggleable(
+                value = checked,
+                role = Role.Switch,
+                onValueChange = onChecked,
+            )
+            .semantics(mergeDescendants = true) { contentDescription = title },
+    ) {
         Switch(
             checked = checked,
-            onCheckedChange = onChecked,
+            onCheckedChange = null,
+            modifier = Modifier.clearAndSetSemantics {},
             colors = SwitchDefaults.colors(checkedThumbColor = Accent, checkedTrackColor = Accent),
         )
     }
@@ -573,7 +618,16 @@ private fun SliderSetting(
             Text(title, color = Color.White, modifier = Modifier.weight(1f))
             Text(valueLabel, color = Color(0xFFADB5C3))
         }
-        Slider(value = value, onValueChange = onValue, valueRange = range, steps = steps)
+        Slider(
+            value = value,
+            onValueChange = onValue,
+            valueRange = range,
+            steps = steps,
+            modifier = Modifier.semantics {
+                contentDescription = title
+                stateDescription = valueLabel
+            },
+        )
         Divider(color = Color(0xFF30353F))
     }
 }
@@ -631,6 +685,10 @@ private fun <T> ChoiceSetting(
                 modifier = Modifier
                     .background(ButtonColor, RoundedCornerShape(8.dp))
                     .clickable { expanded = true }
+                    .semantics {
+                        contentDescription = "$title, $label"
+                        role = Role.Button
+                    }
                     .padding(horizontal = 14.dp, vertical = 9.dp),
             )
             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
@@ -675,10 +733,11 @@ private fun FileSetting(
 private fun SettingRow(
     title: String,
     description: String?,
+    modifier: Modifier = Modifier,
     action: @Composable RowScope.() -> Unit,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        modifier = modifier.fillMaxWidth().padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {

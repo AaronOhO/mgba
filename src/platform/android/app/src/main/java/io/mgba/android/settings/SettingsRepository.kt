@@ -7,7 +7,10 @@ package io.mgba.android.settings
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.view.KeyEvent
 import io.mgba.android.core.EmulatorKey
+import io.mgba.android.logic.settings.EmulatorSettings
+import io.mgba.android.logic.settings.IdleOptimization
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,13 +28,13 @@ class SettingsRepository(context: Context) {
     }
 
     fun reset() {
-        val defaults = EmulatorSettings()
+        val defaults = defaultSettings()
         write(defaults)
         mutableSettings.value = defaults
     }
 
     private fun read(): EmulatorSettings {
-        val defaults = EmulatorSettings()
+        val defaults = defaultSettings()
         return EmulatorSettings(
             volume = preferences.getInt("volume", defaults.volume),
             muted = preferences.getBoolean("muted", defaults.muted),
@@ -63,6 +66,7 @@ class SettingsRepository(context: Context) {
             integerScaling = preferences.getBoolean("integer_scaling", defaults.integerScaling),
             interframeBlending = preferences.getBoolean("interframe_blending", defaults.interframeBlending),
             linearFiltering = preferences.getBoolean("linear_filtering", defaults.linearFiltering),
+            fullscreenPlayer = preferences.getBoolean("fullscreen_player", defaults.fullscreenPlayer),
             showFps = preferences.getBoolean("show_fps", defaults.showFps),
             showFrameCounter = preferences.getBoolean("show_frame_counter", defaults.showFrameCounter),
             showResetInfo = preferences.getBoolean("show_reset_info", defaults.showResetInfo),
@@ -132,6 +136,7 @@ class SettingsRepository(context: Context) {
             .putBoolean("integer_scaling", settings.integerScaling)
             .putBoolean("interframe_blending", settings.interframeBlending)
             .putBoolean("linear_filtering", settings.linearFiltering)
+            .putBoolean("fullscreen_player", settings.fullscreenPlayer)
             .putBoolean("show_fps", settings.showFps)
             .putBoolean("show_frame_counter", settings.showFrameCounter)
             .putBoolean("show_reset_info", settings.showResetInfo)
@@ -176,6 +181,21 @@ class SettingsRepository(context: Context) {
         "SCANLINES" -> "scanlines"
         else -> ""
     }
+
+    private fun defaultSettings(): EmulatorSettings = EmulatorSettings(
+        inputBindings = mapOf(
+            EmulatorKey.A to KeyEvent.KEYCODE_BUTTON_A,
+            EmulatorKey.B to KeyEvent.KEYCODE_BUTTON_B,
+            EmulatorKey.SELECT to KeyEvent.KEYCODE_BUTTON_SELECT,
+            EmulatorKey.START to KeyEvent.KEYCODE_BUTTON_START,
+            EmulatorKey.RIGHT to KeyEvent.KEYCODE_DPAD_RIGHT,
+            EmulatorKey.LEFT to KeyEvent.KEYCODE_DPAD_LEFT,
+            EmulatorKey.UP to KeyEvent.KEYCODE_DPAD_UP,
+            EmulatorKey.DOWN to KeyEvent.KEYCODE_DPAD_DOWN,
+            EmulatorKey.R to KeyEvent.KEYCODE_BUTTON_R1,
+            EmulatorKey.L to KeyEvent.KEYCODE_BUTTON_L1,
+        ),
+    )
 
     private companion object {
         const val PREFERENCES_NAME = "emulator_settings"
